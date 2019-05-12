@@ -4,42 +4,54 @@ import time
 import unittest
 
 class NewVisitorTest(unittest.TestCase):
-	'''Тест нового посетителя'''
-	def setUp(self):
-		'''установка (конструктор)'''
-		self.browser = webdriver.Firefox()
+    '''Тест нового посетителя'''
+    def setUp(self):
+        '''установка (конструктор)'''
+        self.browser = webdriver.Firefox()
 
-	def tearDown(self):
-		'''демонтаж (деструктор)'''
-		self.browser.quit()
+    def tearDown(self):
+        '''демонтаж (деструктор)'''
+        self.browser.quit()
 
-	def test_can_start_a_list_and_retrieve_it_later(self):
-		'''тест: можно начать список и получить его позже'''
-		# открываем домашнюю страницу
-		self.browser.get('http://localhost:8000')
-		# заголовок и шапка должны соответствовать
-		self.assertIn('To-Do', self.browser.title)
-		header_text = self.browser.find_element_by_tag_name('h1').text
-		self.assertIn('To-Do', header_text)
-		
-		#Предлагается сразу ввести эл-и списка
-		inputbox = self.browser.find_element_by_id('id_new_item')
-		self.assertEqual(
-			inputbox.get_attribute('placeholder'),
-			'Enter a to-do item'
-		)
-		#Добавляем что нужно сделать
-		inputbox.send_keys('Купить павлиньи перья')
+    def check_for_row_in_list_table(self, row_text):
+        '''подтверждение строки в таблице списака'''
+        table = self.browser.find_element_by_id('id_list_table')
+        rows = table.find_elements_by_tag_name('tr')
+        self.assertIn(row_text, [row.text for row in rows])
 
-		#после нажатия enter, страница обновляетсяи содержит эл-т списка
-		inputbox.send_keys(Keys.ENTER)
-		time.sleep(1)
+    def test_can_start_a_list_and_retrieve_it_later(self):
+        '''тест: можно начать список и получить его позже'''
+        # открываем домашнюю страницу
+        self.browser.get('http://localhost:8000')
+        # заголовок и шапка должны соответствовать
+        self.assertIn('To-Do', self.browser.title)
+        header_text = self.browser.find_element_by_tag_name('h1').text
+        self.assertIn('To-Do', header_text)
+        
+        #Предлагается сразу ввести эл-и списка
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        self.assertEqual(
+            inputbox.get_attribute('placeholder'),
+            'Enter a to-do item'
+        )
+        #Добавляем что нужно сделать
+        inputbox.send_keys('Купить павлиньи перья')
 
-		table = self.browser.find_element_by_id('id_list_table')
-		rows = table.find_elements_by_tag_name('tr')
-		self.assertIn('1: Купить павлиньи перья', [row.text for row in rows])
+        #после нажатия enter, страница обновляетсяи содержит эл-т списка
+        inputbox.send_keys(Keys.ENTER)
+        time.sleep(1)
+        self.check_for_row_in_list_table('1: Купить павлиньи перья')
 
-		self.fail('Закончить тест!')
+        inputbox = self.browser.find_element_by_id('id_new_item')
+        inputbox.send_keys('Сделать мушку из павлиньих перьев')
+        inputbox.send_keys(Keys.ENTER)
+        time.sleep(1)
+
+        #Таблица снова обновляется и теперь показывает оба эл-та списка
+        self.check_for_row_in_list_table('1: Купить павлиньи перья')
+        self.check_for_row_in_list_table('2: Сделать мушку из павлиньих перьев')
+
+        self.fail('Закончить тест!')
 
 if __name__ == '__main__':
-	unittest.main(warnings='ignore')
+    unittest.main(warnings='ignore')
